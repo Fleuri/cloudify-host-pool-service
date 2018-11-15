@@ -54,3 +54,8 @@ docs/_build/
 target/
 
 *.iml
+
+# PyCharm stuff
+
+.idea/
+**/.idea/

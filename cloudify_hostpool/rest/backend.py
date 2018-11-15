@@ -34,6 +34,9 @@ from cloudify_hostpool import constants
 from cloudify_hostpool.storage.tinydb_nosql import Database
 from cloudify_hostpool import exceptions
 
+# Used to retrieve hardware specs with SSH
+import paramiko
+
 # we currently don't expose these in the configuration because its somewhat
 # internal. perhaps at a later time we can have this configurable, at which
 # point we need to define the semantics of how to initialize the components.
@@ -278,6 +281,9 @@ class RestBackend(object):
            not config.get('hosts'):
             raise exceptions.UnexpectedData('Empty hosts object')
         hosts = HostAlchemist(config).parse()
+        hosts = self.retrieve_hardware_specs(hosts)
+        print hosts
+        print type(hosts)
         return self.storage.add_hosts(hosts)
 
     def remove_host(self, host_id):
@@ -409,3 +415,29 @@ class RestBackend(object):
                              'Exception: {2}'.format(
                                  endpoint['ip'], endpoint['port'], exc))
             return False
+
+    def run_command(self, command, spec_array, list_key, client):
+        stdin, stdout, stderr = client.exec_command(command)
+        line = stdout.readlines()
+        spec_array[list_key] = line[0].strip('\n')
+
+    def retrieve_hardware_specs(self, hosts):
+        host = hosts[0]
+        if host['os'] == 'linux':
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect(host['endpoint']['ip'], port=host['endpoint']['port'],
+                           username=host['credentials']['username'], password=host['credentials']['password'])
+            spec_array = {}
+            command_list = dict({"cpus": "lscpu | awk '/^CPU\(s\):/{ print $2}'",
+                                 'ram': "free -m | awk '/Mem:/{ print $2}'",
+                                 'disk_size': "df -h | awk '/\/$/{ print $2 }'"})
+
+        for list_key, command in command_list.items():
+            self.run_command(command, spec_array, list_key, client)
+
+        hosts[0]['hardware_specs'] = spec_array
+
+        client.close()
+
+        return hosts
