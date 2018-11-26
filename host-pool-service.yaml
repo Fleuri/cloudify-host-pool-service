@@ -1,3 +1,5 @@
+tosca_definitions_version: cloudify_dsl_1_0
+
 node_types:
 
   cloudify.nodes.HostPoolService:
@@ -22,7 +24,7 @@ node_types:
       source:
         type: string
         description: URL to the source code of the service
-        default: https://github.com/cloudify-cosmo/cloudify-host-pool-service/archive/1.1.zip
+        default: https://github.com/Fleuri/cloudify-host-pool-service/archive/1.2.2.zip 
       working_directory:
         type: string
         description: Working directory for the service workflows
