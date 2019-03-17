@@ -282,8 +282,6 @@ class RestBackend(object):
             raise exceptions.UnexpectedData('Empty hosts object')
         hosts = HostAlchemist(config).parse()
         hosts = self.retrieve_hardware_specs(hosts)
-        print hosts
-        print type(hosts)
         return self.storage.add_hosts(hosts)
 
     def remove_host(self, host_id):
@@ -429,9 +427,11 @@ class RestBackend(object):
             client.connect(host['endpoint']['ip'], port=host['endpoint']['port'],
                            username=host['credentials']['username'], password=host['credentials']['password'])
             spec_array = {}
-            command_list = dict({"cpus": "lscpu | awk '/^CPU\(s\):/{ print $2}'",
+            command_list = dict({'cpus': "lscpu | awk '/^CPU\(s\):/{ print $2}'",
                                  'ram': "free -m | awk '/Mem:/{ print $2}'",
-                                 'disk_size': "df -h | awk '/\/$/{ print $2 }'"})
+                                 'disk_size': "df -h | awk '/\/$/{ print $2 }'",
+                                 'graph_card_model': "lscpu | awk '/Model name/' | sed -e 's/Model name://g' -e 's/[[:blank:]]//g'"
+                                 })
 
         for list_key, command in command_list.items():
             self.run_command(command, spec_array, list_key, client)
