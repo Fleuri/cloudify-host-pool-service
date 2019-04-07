@@ -430,7 +430,8 @@ class RestBackend(object):
             command_list = dict({'cpus': "lscpu | awk '/^CPU\(s\):/{ print $2}'",
                                  'ram': "free -m | awk '/Mem:/{ print $2}'",
                                  'disk_size': "df -h | awk '/\/$/{ print $2 }'",
-                                 'graph_card_model': "lscpu | awk '/Model name/' | sed -e 's/Model name://g' -e 's/^[ \t]*//g'"
+                                 'graph_card_model': "lscpu | awk '/Model name/' | sed -e 's/Model name://g' -e 's/^[ \t]*//g'",
+                                 'cpu_arch': "lscpu | awk '/Architecture/{ print $2 }'"
                                  })
 
         for list_key, command in command_list.items():
